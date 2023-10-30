@@ -1,132 +1,126 @@
 #include <iostream>
-#include <cmath>
 #include <vector>
-#include <iomanip>
-#include "ldltFactorization.h"
+#include <cmath>
 
-void RelativeError(std::vector<double> &x1, std::vector<double> &x2, double &maxRelativeErrore, int &indexError){
-    int matrixSize = x1.size();
-    for(int index = 0; index < matrixSize; index++){
-        double error = abs(x1[index] - x2[index]) / abs(x2[index]);
-        if(error > maxRelativeErrore)
-            maxRelativeErrore = error;
-            indexError = index + 1;
-    }
-    return;
+// Variant 3
+// x1^2 * x2^2 - 3x1^2 - 6x2^3 + 8 = 0
+// x1^4 - 9x2 + 2 = 0
+// starts (-1.5, 1.5) and (-1, 1)
+
+
+
+double func1(double x1, double x2) {
+    return x1 * x1 * x2 * x2 - 3 * x1 * x1 - 6 * x2 * x2 * x2 + 8;
+}
+
+double func1_dx1(double x1, double x2) {
+    return 2 * x1 * x2 * x2 - 6 * x1;
+}
+
+double func1_dx2(double x1, double x2) {
+    return 2 * x1 * x1 * x2 - 18 * x2 * x2;
+}
+
+double func2(double x1, double x2) {
+    return x1 * x1 * x1 * x1 - 9 * x2 + 2;
+}
+
+double func2_dx1(double x1, double x2) {
+    return 4 * x1 * x1 * x1;
+}
+
+double func2_dx2(double x1, double x2) {
+    return -9;
 }
 
 
-void Zeros(std::vector<double> &result, int &size){
-    result.clear();
-    for(int index = 0; index < size; index++)
-        result.push_back(0);
+std::vector<double> solve(std::vector<std::vector<double>> &A, std::vector<double> &b) {
+    return std::vector<double>(b.size());
 }
 
-void MatrixMultiplication(std::vector<std::vector<double> > A, std::vector<double> x, std::vector<double> &matrixMultiplication){
-    int matrixSize = A.size();
-    Zeros(matrixMultiplication, matrixSize);
-    for(int index = 0; index < matrixSize; index++){
-        for(int jIndex = 0; jIndex < matrixSize; jIndex++)
-            matrixMultiplication[index] += A[index][jIndex] * x[jIndex];
-    }
-    return;
-}
+void manual(double x1, double x2, double E0, double E1, int max_iter) {
+    double delta0 = std::max(func1(x1, x2),
+                             func2(x1, x2));
+    double delta1 = 1;
 
-void ResidualVectorCalculation(std::vector<std::vector<double> > A, std::vector<double> b, std::vector<double> &result, std::vector<double> &residualVector){
-    int matrixSize = b.size();
-    std::vector<double> matrixMultiplication;
-    MatrixMultiplication(A, result, matrixMultiplication);
-    for(int index = 0; index < matrixSize; index++)
-        residualVector.push_back(b[index] - matrixMultiplication[index]);
-    return;
-}
+    int iter = 0;
 
-void GaussElimination(std::vector<std::vector<double> > A, std::vector<double> b, std::vector<double> &result){
-    int matrixSize = A.size();
-        for(int index = 0; index < matrixSize; index++){
-            int indexMax = index;
-            for(int jIndex = index + 1; jIndex < matrixSize; jIndex++){
-                if(abs(A[jIndex][index]) > abs(A[indexMax][index])){
-                    indexMax = jIndex;
-                }
-            }
-            assert(A[indexMax][index] != 0);
-            std::swap(A[index], A[indexMax]);
-            std::swap(b[index], b[indexMax]);
+    while ((delta0 > E0 || delta1 > E1) && iter < max_iter) {
+        iter++;
 
-            for(int jIndex = index + 1; jIndex < matrixSize; jIndex++){
-                double factor = A[jIndex][index] / A[index][index];
-                for(int kIndex = index; kIndex < matrixSize; kIndex++)
-                    A[jIndex][kIndex] -= factor * A[index][kIndex];
-                b[jIndex] -= factor * b[index];
-            }
+        std::cout << iter << ":\t" << "x1: " << x1 << "\t" << "x2: " << x2 << std::endl;
+
+        std::vector<double> F{-func1(x1, x2), -func2(x1, x2)};
+        std::vector<std::vector<double>> J{{func1_dx1(x1, x2), func1_dx2(x1, x2)},
+                                           {func2_dx1(x1, x2), func2_dx2(x1, x2)}};
+
+        std::vector<double> solution = solve(J, F);
+        x1 += solution[0];
+        x2 += solution[1];
+
+        delta0 = fabs(F[0]);
+        for (int i = 1; i < F.size(); i++) {
+            if (delta0 < fabs(F[i]))
+                delta0 = fabs(F[i]);
         }
 
-    Zeros(result, matrixSize);
+        double v1 = fabs(solution[0]) < 1 ? solution[0] : solution[0] / x1;
+        double v2 = fabs(solution[1]) < 1 ? solution[1] : solution[1] / x2;;
+        delta1 = std::max(v1, v2);
+    }
+}
 
-    for(int index = matrixSize - 1; index > -1; index--){
-        double sum = 0;
-        for(int jIndex = index; jIndex < matrixSize; jIndex++){
-            sum += A[index][jIndex] * result[jIndex];
+std::vector<std::vector<double>> get_J(double x1, double x2, double k) {
+    return std::vector<std::vector<double>> {{(func1(x1 + x1 * k, x2) - func1(x1, x2)) / k , (func1(x1, x2 + x2 * k) - func1(x1, x2)) / k },
+                                             {(func2(x1 + x1 * k, x2) - func2(x1, x2)) / k , (func2(x1, x2 + x2 * k) - func2(x1, x2)) / k }};
+
+}
+
+void numerical(double x1, double x2, double E0, double E1, int max_iter, double k) {
+    double delta0 = std::max(func1(x1, x2),
+                             func2(x1, x2));
+    double delta1 = 1;
+
+    int iter = 0;
+
+    while ((delta0 > E0 || delta1 > E1) && iter < max_iter) {
+        iter++;
+        std::cout << iter << ":\t" << "x1: " << x1 << "\t" << "x2: " << x2 << std::endl;
+
+        std::vector<double> F{-func1(x1, x2), -func2(x1, x2)};
+        std::vector<std::vector<double>> J = get_J(x1, x2, k);
+
+        std::vector<double> solution = solve(J, F);
+        x1 += solution[0];
+        x2 += solution[1];
+
+        delta0 = fabs(F[0]);
+        for (int i = 1; i < F.size(); i++) {
+            if (delta0 < fabs(F[i]))
+                delta0 = fabs(F[i]);
         }
-        result[index] = (b[index] - sum) / A[index][index];
-    }
 
-    return;
-}
-
-int main(){
-    std::vector<std::vector<double> > A = {
-                            {6, 13, -17},
-                            {13, 29, -38},
-                            {-17, -38, 50}
-                            };
-    std::vector<double> b = {2, 4, -5};
-
-    std::vector<double> result;
-    std::vector<double> resultAx;
-    std::vector<double> resultLDLT;
-
-    std::vector<double> residualVector;
-    std::vector<double> matrixAXMultiplication;
-
-    double maxRelativeError = 0.0;
-    int indexError = 0;
-    
-    GaussElimination(A, b, result);
-    ResidualVectorCalculation(A, b, result, residualVector);
-
-    std::cout << "Решение СЛАУ: ";
-    for(auto iter : result)
-        std::cout << std::setprecision(18) << iter << " ";
-    
-    std::cout << "\nВектор невязки: ";
-    for(auto iter : residualVector)
-        std::cout << iter << " ";
-
-    double maxValue = 0;
-    for(auto iter : residualVector)
-        if(abs(iter) > maxValue)
-            maxValue = iter;
-
-    std::cout << "\nНорма вектора невязки: " << maxValue;
-
-    MatrixMultiplication(A, result, matrixAXMultiplication);
-    GaussElimination(A, matrixAXMultiplication, resultAx);
-    
-    RelativeError(resultAx, result, maxRelativeError, indexError);
-
-    std::cout << "\n\nРешение СЛАУ Ax = A~x: ";
-    for(auto iter : resultAx)
-        std::cout << iter << " ";
-    
-    std::cout << "\nОтносительная погрешность метода Гаусса: " << maxRelativeError;
-    std::cout << "\nМаксимальная разница была дастигнута в элементе: " << indexError;
-    
-    if(solve_TLDL(A, b, resultLDLT)){
-        std::cout << "\n\nРешение СЛАУ LDLT: ";
-        for(auto iter : resultLDLT)
-            std::cout << std::setprecision(18) << iter << " ";
+        double v1 = fabs(solution[0]) < 1 ? solution[0] : solution[0] / x1;
+        double v2 = fabs(solution[1]) < 1 ? solution[1] : solution[1] / x2;;
+        delta1 = std::max(v1, v2);
     }
 }
 
+
+
+int main() {
+
+    double x1 = -1.5;
+    double x2 = 1.5;
+
+    double E0 = 1e-5;
+    double E1 = 1e-5;
+    int max_iter = 100;
+
+    manual(x1, x2, E0, E1, max_iter);
+
+    numerical(x1, x2, E0, E1, max_iter, 0.05);
+
+
+    return 0;
+}
