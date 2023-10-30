@@ -1,25 +1,38 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <iomanip>
+#include "ldltFactorization.h"
 
-using namespace std;
-
-void Zeros(std::vector<double> &result, int &size){
-    for(int index = 0; index < size; index++)
-        result.push_back(0);
-}
-
-void MatrixMultiplication(std::vector<std::vector<double> > &A, std::vector<double> &x, std::vector<double> &matrixMultiplication){
-    int matrixSize = A.size();
-    Zeros(matrixMultiplication, matrixSize);
+void RelativeError(std::vector<double> &x1, std::vector<double> &x2, double &maxRelativeErrore, int &indexError){
+    int matrixSize = x1.size();
     for(int index = 0; index < matrixSize; index++){
-        for(int jIndex = 0; jIndex < matrixSize; jIndex++)
-            matrixMultiplication[index] += A[index][jIndex] *  x[jIndex];
+        double error = abs(x1[index] - x2[index]) / abs(x2[index]);
+        if(error > maxRelativeErrore)
+            maxRelativeErrore = error;
+            indexError = index + 1;
     }
     return;
 }
 
-void ResidualVectorCalculation(std::vector<std::vector<double> > &A, std::vector<double> &b, std::vector<double> &result, std::vector<double> &residualVector){
+
+void Zeros(std::vector<double> &result, int &size){
+    result.clear();
+    for(int index = 0; index < size; index++)
+        result.push_back(0);
+}
+
+void MatrixMultiplication(std::vector<std::vector<double> > A, std::vector<double> x, std::vector<double> &matrixMultiplication){
+    int matrixSize = A.size();
+    Zeros(matrixMultiplication, matrixSize);
+    for(int index = 0; index < matrixSize; index++){
+        for(int jIndex = 0; jIndex < matrixSize; jIndex++)
+            matrixMultiplication[index] += A[index][jIndex] * x[jIndex];
+    }
+    return;
+}
+
+void ResidualVectorCalculation(std::vector<std::vector<double> > A, std::vector<double> b, std::vector<double> &result, std::vector<double> &residualVector){
     int matrixSize = b.size();
     std::vector<double> matrixMultiplication;
     MatrixMultiplication(A, result, matrixMultiplication);
@@ -28,7 +41,7 @@ void ResidualVectorCalculation(std::vector<std::vector<double> > &A, std::vector
     return;
 }
 
-void GaussElimination(std::vector<std::vector<double> > &A, std::vector<double> &b, std::vector<double> &result){
+void GaussElimination(std::vector<std::vector<double> > A, std::vector<double> b, std::vector<double> &result){
     int matrixSize = A.size();
         for(int index = 0; index < matrixSize; index++){
             int indexMax = index;
@@ -37,7 +50,7 @@ void GaussElimination(std::vector<std::vector<double> > &A, std::vector<double> 
                     indexMax = jIndex;
                 }
             }
-
+            assert(A[indexMax][index] != 0);
             std::swap(A[index], A[indexMax]);
             std::swap(b[index], b[indexMax]);
 
@@ -64,24 +77,28 @@ void GaussElimination(std::vector<std::vector<double> > &A, std::vector<double> 
 
 int main(){
     std::vector<std::vector<double> > A = {
-                            {2.30, 5.70, -0.80},
-                            {3.50, -2.70, 5.30},
-                            {1.70, 2.30, -1.80}
+                            {6, 13, -17},
+                            {13, 29, -38},
+                            {-17, -38, 50}
                             };
-    std::vector<double> b = {-6.49, 19.20, -5.09};
-    std::vector<double> result;
+    std::vector<double> b = {2, 4, -5};
 
-    std::vector<std::vector<double> > A1(A);
-    std::vector<double> b1(b);
+    std::vector<double> result;
+    std::vector<double> resultAx;
+    std::vector<double> resultLDLT;
 
     std::vector<double> residualVector;
+    std::vector<double> matrixAXMultiplication;
 
+    double maxRelativeError = 0.0;
+    int indexError = 0;
+    
     GaussElimination(A, b, result);
-    ResidualVectorCalculation(A1, b1, result, residualVector);
+    ResidualVectorCalculation(A, b, result, residualVector);
 
     std::cout << "Решение СЛАУ: ";
     for(auto iter : result)
-        std::cout << iter << " ";
+        std::cout << std::setprecision(18) << iter << " ";
     
     std::cout << "\nВектор невязки: ";
     for(auto iter : residualVector)
@@ -94,5 +111,22 @@ int main(){
 
     std::cout << "\nНорма вектора невязки: " << maxValue;
 
-    return 0;
+    MatrixMultiplication(A, result, matrixAXMultiplication);
+    GaussElimination(A, matrixAXMultiplication, resultAx);
+    
+    RelativeError(resultAx, result, maxRelativeError, indexError);
+
+    std::cout << "\n\nРешение СЛАУ Ax = A~x: ";
+    for(auto iter : resultAx)
+        std::cout << iter << " ";
+    
+    std::cout << "\nОтносительная погрешность метода Гаусса: " << maxRelativeError;
+    std::cout << "\nМаксимальная разница была дастигнута в элементе: " << indexError;
+    
+    if(solve_TLDL(A, b, resultLDLT)){
+        std::cout << "\n\nРешение СЛАУ LDLT: ";
+        for(auto iter : resultLDLT)
+            std::cout << std::setprecision(18) << iter << " ";
+    }
 }
+
