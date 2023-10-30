@@ -1,19 +1,4 @@
-#include <iostream>
-#include <cmath>
-#include <vector>
-#include <iomanip>
-
-void RelativeError(std::vector<double> &x1, std::vector<double> &x2, double &maxRelativeErrore, int &indexError){
-    int matrixSize = x1.size();
-    for(int index = 0; index < matrixSize; index++){
-        double error = abs(x1[index] - x2[index]) / abs(x2[index]);
-        if(error > maxRelativeErrore)
-            maxRelativeErrore = error;
-            indexError = index + 1;
-    }
-    return;
-}
-
+#include "gauss.h"
 
 void Zeros(std::vector<double> &result, int &size){
     result.clear();
@@ -31,14 +16,6 @@ void MatrixMultiplication(std::vector<std::vector<double> > A, std::vector<doubl
     return;
 }
 
-void ResidualVectorCalculation(std::vector<std::vector<double> > A, std::vector<double> b, std::vector<double> &result, std::vector<double> &residualVector){
-    int matrixSize = b.size();
-    std::vector<double> matrixMultiplication;
-    MatrixMultiplication(A, result, matrixMultiplication);
-    for(int index = 0; index < matrixSize; index++)
-        residualVector.push_back(b[index] - matrixMultiplication[index]);
-    return;
-}
 
 void GaussElimination(std::vector<std::vector<double> > A, std::vector<double> b, std::vector<double> &result){
     int matrixSize = A.size();
@@ -74,53 +51,53 @@ void GaussElimination(std::vector<std::vector<double> > A, std::vector<double> b
     return;
 }
 
-int main(){
-    std::vector<std::vector<double> > A = {
-                            {6, 13, -17},
-                            {13, 29, -38},
-                            {-17, -38, 50}
-                            };
-    std::vector<double> b = {2, 4, -5};
+// int main(){
+//     std::vector<std::vector<double> > A = {
+//                             {6, 13, -17},
+//                             {13, 29, -38},
+//                             {-17, -38, 50}
+//                             };
+//     std::vector<double> b = {2, 4, -5};
 
-    std::vector<double> result;
-    std::vector<double> resultAx;
-    std::vector<double> resultLDLT;
+//     std::vector<double> result;
+//     std::vector<double> resultAx;
+//     std::vector<double> resultLDLT;
 
-    std::vector<double> residualVector;
-    std::vector<double> matrixAXMultiplication;
+//     std::vector<double> residualVector;
+//     std::vector<double> matrixAXMultiplication;
 
-    double maxRelativeError = 0.0;
-    int indexError = 0;
+//     double maxRelativeError = 0.0;
+//     int indexError = 0;
     
-    GaussElimination(A, b, result);
-    ResidualVectorCalculation(A, b, result, residualVector);
+//     GaussElimination(A, b, result);
+//     ResidualVectorCalculation(A, b, result, residualVector);
 
-    std::cout << "Решение СЛАУ: ";
-    for(auto iter : result)
-        std::cout << std::setprecision(18) << iter << " ";
+//     std::cout << "Решение СЛАУ: ";
+//     for(auto iter : result)
+//         std::cout << std::setprecision(18) << iter << " ";
     
-    std::cout << "\nВектор невязки: ";
-    for(auto iter : residualVector)
-        std::cout << iter << " ";
+//     std::cout << "\nВектор невязки: ";
+//     for(auto iter : residualVector)
+//         std::cout << iter << " ";
 
-    double maxValue = 0;
-    for(auto iter : residualVector)
-        if(abs(iter) > maxValue)
-            maxValue = iter;
+//     double maxValue = 0;
+//     for(auto iter : residualVector)
+//         if(abs(iter) > maxValue)
+//             maxValue = iter;
 
-    std::cout << "\nНорма вектора невязки: " << maxValue;
+//     std::cout << "\nНорма вектора невязки: " << maxValue;
 
-    MatrixMultiplication(A, result, matrixAXMultiplication);
-    GaussElimination(A, matrixAXMultiplication, resultAx);
+//     MatrixMultiplication(A, result, matrixAXMultiplication);
+//     GaussElimination(A, matrixAXMultiplication, resultAx);
     
-    RelativeError(resultAx, result, maxRelativeError, indexError);
+//     RelativeError(resultAx, result, maxRelativeError, indexError);
 
-    std::cout << "\n\nРешение СЛАУ Ax = A~x: ";
-    for(auto iter : resultAx)
-        std::cout << iter << " ";
+//     std::cout << "\n\nРешение СЛАУ Ax = A~x: ";
+//     for(auto iter : resultAx)
+//         std::cout << iter << " ";
     
-    std::cout << "\nОтносительная погрешность метода Гаусса: " << maxRelativeError;
-    std::cout << "\nМаксимальная разница была дастигнута в элементе: " << indexError;
+//     std::cout << "\nОтносительная погрешность метода Гаусса: " << maxRelativeError;
+//     std::cout << "\nМаксимальная разница была дастигнута в элементе: " << indexError;
     
-}
+// }
 

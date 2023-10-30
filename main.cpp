@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
-
+#include "gauss.h"
 // Variant 3
 // x1^2 * x2^2 - 3x1^2 - 6x2^3 + 8 = 0
 // x1^4 - 9x2 + 2 = 0
@@ -34,10 +34,6 @@ double func2_dx2(double x1, double x2) {
 }
 
 
-std::vector<double> solve(std::vector<std::vector<double>> &A, std::vector<double> &b) {
-    return std::vector<double>(b.size());
-}
-
 void manual(double x1, double x2, double E0, double E1, int max_iter) {
     double delta0 = std::max(func1(x1, x2),
                              func2(x1, x2));
@@ -54,7 +50,8 @@ void manual(double x1, double x2, double E0, double E1, int max_iter) {
         std::vector<std::vector<double>> J{{func1_dx1(x1, x2), func1_dx2(x1, x2)},
                                            {func2_dx1(x1, x2), func2_dx2(x1, x2)}};
 
-        std::vector<double> solution = solve(J, F);
+        std::vector<double> solution;
+        GaussElimination(J, F, solution);
         x1 += solution[0];
         x2 += solution[1];
 
@@ -64,15 +61,15 @@ void manual(double x1, double x2, double E0, double E1, int max_iter) {
                 delta0 = fabs(F[i]);
         }
 
-        double v1 = fabs(solution[0]) < 1 ? solution[0] : solution[0] / x1;
-        double v2 = fabs(solution[1]) < 1 ? solution[1] : solution[1] / x2;;
+        double v1 = fabs(x1) < 1 ? solution[0] : solution[0] / x1;
+        double v2 = fabs(x2) < 1 ? solution[1] : solution[1] / x2;;
         delta1 = std::max(v1, v2);
     }
 }
 
 std::vector<std::vector<double>> get_J(double x1, double x2, double k) {
-    return std::vector<std::vector<double>> {{(func1(x1 + x1 * k, x2) - func1(x1, x2)) / k , (func1(x1, x2 + x2 * k) - func1(x1, x2)) / k },
-                                             {(func2(x1 + x1 * k, x2) - func2(x1, x2)) / k , (func2(x1, x2 + x2 * k) - func2(x1, x2)) / k }};
+    return std::vector<std::vector<double>> {{(func1(x1 + x1 * k, x2) - func1(x1, x2)) / k / x1 , (func1(x1, x2 + x2 * k) - func1(x1, x2)) / k / x2 },
+                                             {(func2(x1 + x1 * k, x2) - func2(x1, x2)) / k / x1, (func2(x1, x2 + x2 * k) - func2(x1, x2)) / k / x2}};
 
 }
 
@@ -90,7 +87,8 @@ void numerical(double x1, double x2, double E0, double E1, int max_iter, double 
         std::vector<double> F{-func1(x1, x2), -func2(x1, x2)};
         std::vector<std::vector<double>> J = get_J(x1, x2, k);
 
-        std::vector<double> solution = solve(J, F);
+        std::vector<double> solution;
+        GaussElimination(J, F, solution);
         x1 += solution[0];
         x2 += solution[1];
 
@@ -100,8 +98,8 @@ void numerical(double x1, double x2, double E0, double E1, int max_iter, double 
                 delta0 = fabs(F[i]);
         }
 
-        double v1 = fabs(solution[0]) < 1 ? solution[0] : solution[0] / x1;
-        double v2 = fabs(solution[1]) < 1 ? solution[1] : solution[1] / x2;;
+        double v1 = fabs(x1) < 1 ? solution[0] : solution[0] / x1;
+        double v2 = fabs(x2) < 1 ? solution[1] : solution[1] / x2;;
         delta1 = std::max(v1, v2);
     }
 }
