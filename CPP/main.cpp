@@ -16,12 +16,6 @@ void RelativeError(std::vector<double> &x1, std::vector<double> &x2, double &max
 }
 
 
-void Zeros(std::vector<double> &result, int &size){
-    result.clear();
-    for(int index = 0; index < size; index++)
-        result.push_back(0);
-}
-
 void MatrixMultiplication(std::vector<std::vector<double> > A, std::vector<double> x, std::vector<double> &matrixMultiplication){
     int matrixSize = A.size();
     Zeros(matrixMultiplication, matrixSize);
