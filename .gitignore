@@ -28,3 +28,5 @@ src/bsu/rfct/course2/group6/boreyko/.DS_Store
 main
 *.env
 *.venv
+
+*.out
