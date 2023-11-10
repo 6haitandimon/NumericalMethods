@@ -29,3 +29,4 @@ main
 
 *.env
 *.venv
+*.out
