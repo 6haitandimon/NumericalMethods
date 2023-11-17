@@ -125,8 +125,8 @@ int main()
     double x1 = -1.5;
     double x2 = 1.5;
 
-    double E0 = 1e-5;
-    double E1 = 1e-5;
+    double E0 = 1e-9;
+    double E1 = 1e-9    ;
     int max_iter = 100;
 
     std::cout << "Manual:\n";
