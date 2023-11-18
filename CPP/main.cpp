@@ -39,12 +39,12 @@ double func2_dx2(double x1, double x2)
 
 void manual(double x1, double x2, double E0, double E1, int max_iter)
 {
-    double delta0 = std::max(func1(x1, x2),
-                             func2(x1, x2));
+    double delta0 = std::max(fabs(func1(x1, x2)),
+                             fabs(func2(x1, x2)));
     double delta1 = 1;
-
+    
     int iter = 0;
-
+    
     while ((delta0 > E0 || delta1 > E1) && iter < max_iter)
     {
         iter++;
@@ -71,7 +71,7 @@ void manual(double x1, double x2, double E0, double E1, int max_iter)
 
         double v1 = fabs(x1) < 1 ? solution[0] : solution[0] / x1;
         double v2 = fabs(x2) < 1 ? solution[1] : solution[1] / x2;
-        ;
+        
         delta1 = std::max(v1, v2);
     }
 }
@@ -84,12 +84,12 @@ std::vector<std::vector<double>> get_J(double x1, double x2, double k)
 
 void numerical(double x1, double x2, double E0, double E1, int max_iter, double k)
 {
-    double delta0 = std::max(func1(x1, x2),
-                             func2(x1, x2));
+    double delta0 = std::max(fabs(func1(x1, x2)),
+                             fabs(func2(x1, x2)));
     double delta1 = 1;
 
     int iter = 0;
-
+   
     while ((delta0 > E0 || delta1 > E1) && iter < max_iter)
     {
         iter++;
@@ -114,7 +114,7 @@ void numerical(double x1, double x2, double E0, double E1, int max_iter, double 
 
         double v1 = fabs(x1) < 1 ? solution[0] : solution[0] / x1;
         double v2 = fabs(x2) < 1 ? solution[1] : solution[1] / x2;
-        ;
+        
         delta1 = std::max(v1, v2);
     }
 }
@@ -126,13 +126,23 @@ int main()
     double x2 = 1.5;
 
     double E0 = 1e-9;
-    double E1 = 1e-9    ;
+    double E1 = 1e-9;
     int max_iter = 100;
 
     std::cout << "Manual:\n";
     manual(x1, x2, E0, E1, max_iter);
-    std::cout << "Numerical:\n";
+
+    std::cout << "Numerical, M = 0.000001:\n";
+    numerical(x1, x2, E0, E1, max_iter, 0.000001);
+
+    std::cout << "Numerical, M = 0.01:\n";
     numerical(x1, x2, E0, E1, max_iter, 0.01);
+
+    std::cout << "Numerical, M = 0.05:\n";
+    numerical(x1, x2, E0, E1, max_iter, 0.05);
+
+    std::cout << "Numerical, M = 0.1:\n";
+    numerical(x1, x2, E0, E1, max_iter, 0.1);
 
     return 0;
 }
