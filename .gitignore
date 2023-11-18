@@ -29,4 +29,6 @@ main
 *.env
 *.venv
 
+.vscode
 *.out
+*.pdf
