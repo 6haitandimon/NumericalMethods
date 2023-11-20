@@ -102,5 +102,6 @@ int main(){
 
     for(int i = 0; i < vectorSize; i++)
         std::cout << "x = " << X[i] << ", y = " << coefficient[0] + coefficient[1] * X[i] + coefficient[2] * pow(X[i], 2.0) << "\n";
+
     return 0;
 }
