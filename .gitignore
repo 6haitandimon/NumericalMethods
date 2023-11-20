@@ -29,6 +29,8 @@ main
 *.env
 *.venv
 
+.DS_Store
 .vscode
 *.out
 *.pdf
+*.py
