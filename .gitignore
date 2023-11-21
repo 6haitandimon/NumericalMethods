@@ -30,3 +30,6 @@ main
 *.venv
 
 *.out
+.DS_Store
+.vscode
+*.pdf
