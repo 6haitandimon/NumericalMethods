@@ -64,8 +64,8 @@ double SimpsonsCubicFormula(double a, double b, double c, double d){
     int N = 10;
     int M = 10;
 
-    double hx = double((b - a) / 2 * N);
-    double hy = double((d - c) / 2 * M);
+    double hx = double((b - a) / 2 / N);
+    double hy = double((d - c) / 2 / M);
     
 
     for(int i = 0; i < N; i++){
