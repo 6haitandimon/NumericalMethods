@@ -32,3 +32,5 @@ main
 *.out
 *.pdf
 *.DS_Store
+build/
+main.py
