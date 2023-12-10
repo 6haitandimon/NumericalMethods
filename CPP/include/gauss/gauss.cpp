@@ -17,7 +17,7 @@ void MatrixMultiplication(std::vector<std::vector<double> > A, std::vector<doubl
 }
 
 
-void GaussElimination(std::vector<std::vector<double> > A, std::vector<double> b, std::vector<double> &result){
+bool GaussElimination(std::vector<std::vector<double> > A, std::vector<double> b, std::vector<double> &result){
     int matrixSize = A.size();
         for(int index = 0; index < matrixSize; index++){
             int indexMax = index;
@@ -26,7 +26,8 @@ void GaussElimination(std::vector<std::vector<double> > A, std::vector<double> b
                     indexMax = jIndex;
                 }
             }
-            assert(A[indexMax][index] != 0);
+            if(A[indexMax][index] == 0)
+                return 0;
             std::swap(A[index], A[indexMax]);
             std::swap(b[index], b[indexMax]);
 
@@ -48,5 +49,5 @@ void GaussElimination(std::vector<std::vector<double> > A, std::vector<double> b
         result[index] = (b[index] - sum) / A[index][index];
     }
 
-    return;
+    return 1;
 }

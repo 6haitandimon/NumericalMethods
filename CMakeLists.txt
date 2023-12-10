@@ -6,7 +6,7 @@ project(NumericalMethods CXX)
 add_executable(NumericalMethods
     #Library executable
     CPP/include/gauss/gauss.cpp
-    #CPP/include/neutone/neuton.cpp
+    CPP/include/neutone/neuton.cpp
 
     #main
     CPP/src/main.cpp
