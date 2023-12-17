@@ -1,21 +1,48 @@
 #include "neuton.h"
 
+double** createMatrix(int x)
+{
+	double **A = new double*[x];
+	for (int i = 0; i < x; i++)
+		A[i] = new double[x + 1];
+	return A;
+}
+void deleteMatrix(double **X, int x)
+{
+	for (int i = 0; i < x; i++)
+		delete X[i];
+	delete[] X;
+}
+void copyMatrix(double **X, double **copyX, int x)
+{
+	for (int i = 0; i < x; i++)
+	{
+		for (int j = 0; j < x + 1; j++)
+			copyX[i][j] = X[i][j];
+	}
+}
+
+
 double f1(double *uk1, double *uk, double t, double Tau)
 {
-	return uk1[0] - uk[0] - Tau*(-uk1[0] * uk1[1] + ((t < 1e-9) ? 0.0 : (sin(t) / t)));
+	return uk1[0] - uk[0] - Tau * (uk1[1] * uk1[2] * (k - a) / a);
 }
 
 double f2(double *uk1, double *uk, double t, double Tau)
 {
-	return uk1[1] - uk[1] - Tau*(-uk1[1] * uk1[1] + (3.125*t) / (1 + t*t));
+	return uk1[1] - uk[1] - Tau * (uk1[0] * uk1[2] * (k + a) / k);
+}
+double f3(double *uk1, double *uk, double t, double Tau)
+{
+	return uk1[2] - uk[2] - Tau * (uk1[0] * uk1[1] * (a - k) / a);
 }
 
 
 double Differential(pf f, double *uk1, double *uk, double t, double Tau, int n)
 {
 	double dx = 1e-9;
-	double* D = new double[2];
-	for (int i = 0; i < 2; i++)
+	double* D = new double[3];
+	for (int i = 0; i < 3; i++)
 	{
 		if (i == n - 1)
 		{
@@ -35,8 +62,8 @@ double Differential(pf f, double *uk1, double *uk, double t, double Tau, int n)
 
 double* Neuton(double *yk_plus, double *yk, double tk, double Tau, int n)
 {
-    std::vector<std::vector<double>> Jako(n, std::vector<double>(n));
-	std::vector<double> An(n);
+    double **Jako = createMatrix(n);
+	double *An = new double[n];
 	double e = 1e-9, b1 = 0, b2 = 0;
 
 	int itr = 1;
@@ -44,28 +71,40 @@ double* Neuton(double *yk_plus, double *yk, double tk, double Tau, int n)
 	do{
 		Jako[0][0] = Differential(f1, yk_plus, yk, tk, Tau, 1);
 		Jako[0][1] = Differential(f1, yk_plus, yk, tk, Tau, 2);
-		Jako[0][2] = -f1(yk_plus, yk, tk, Tau);				
+		Jako[0][2] = Differential(f1, yk_plus, yk, tk, Tau, 3);
+		Jako[0][3] = -f1(yk_plus, yk, tk, Tau);
 		Jako[1][0] = Differential(f2, yk_plus, yk, tk, Tau, 1);
 		Jako[1][1] = Differential(f2, yk_plus, yk, tk, Tau, 2);
-		Jako[1][2] = -f2(yk_plus, yk, tk, Tau);					
+		Jako[1][2] = Differential(f2, yk_plus, yk, tk, Tau, 3);
+		Jako[1][3] = -f2(yk_plus, yk, tk, Tau);
+		Jako[2][0] = Differential(f3, yk_plus, yk, tk, Tau, 1);
+		Jako[2][1] = Differential(f3, yk_plus, yk, tk, Tau, 2);
+		Jako[2][2] = Differential(f3, yk_plus, yk, tk, Tau, 3);
+		Jako[2][3] = -f3(yk_plus, yk, tk, Tau);
 
-		std::vector<std::vector<double>> copyF(n, std::vector<double>(n));
-        std::vector<double> result;
-		copyF = Jako;
+		double **copyF = createMatrix(n);					
+		copyMatrix(Jako, copyF, n);
+		if (!GaussElimination(An, copyF, n))				
+		{
+			deleteMatrix(copyF, n);	
+			deleteMatrix(Jako, n);
+			delete []An;
+			return yk_plus;
+		}
 
-        
-
-		if (!GaussElimination(copyF, An, result))
-            return 0;
-		yk_plus[0] += An[0];
+		yk_plus[0] += An[0];	
 		yk_plus[1] += An[1];
+		yk_plus[2] += An[2];
 
-		if (fabs(f1(yk_plus, yk, tk, Tau)) > fabs(f2(yk_plus, yk, tk, Tau)))
+		if(fabs(f1(yk_plus, yk, tk, Tau)) > b1)
 			b1 = fabs(f1(yk_plus, yk, tk, Tau));
-		else
+		if(fabs(f2(yk_plus, yk, tk, Tau)) > b1)
 			b1 = fabs(f2(yk_plus, yk, tk, Tau));
+		if(fabs(f3(yk_plus, yk, tk, Tau)) > b1)
+			b1 = fabs(f3(yk_plus, yk, tk, Tau));
 
-		for (int i = 0; i < n; i++)
+
+		for (int i = 0; i < n; i++)									
 		{
 			if (fabs(An[i]) < 1)
 				b2 = fabs(An[i]);
@@ -73,8 +112,12 @@ double* Neuton(double *yk_plus, double *yk, double tk, double Tau, int n)
 				b2 = fabs(An[i] / yk_plus[i]);
 		}
 
+		deleteMatrix(copyF, n);
 		itr++;
 	} while ((b1 > e || b2 > e) && (itr < iter_max));
+
+	deleteMatrix(Jako, n);		
+	delete[] An;
 
 	return yk_plus;
 }

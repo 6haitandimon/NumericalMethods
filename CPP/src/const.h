@@ -1,7 +1,7 @@
 #pragma once
 
-const double eps1 = 0.1;
-const double eps2 = 0.00001;
+const double Eps1 = 0.001;
+const double Eps = 0.00001;
 const int T = 1;
-const int a = 1;
-const int k = 2;
+const double a = 1.0;
+const double k = 2.0;

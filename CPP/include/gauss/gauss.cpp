@@ -1,53 +1,75 @@
 #include "gauss.h"
 
-void Zeros(std::vector<double> &result, int &size){
-    result.clear();
-    for(int index = 0; index < size; index++)
-        result.push_back(0);
-}
+// void Zeros(std::vector<double> &result, int &size){
+//     result.clear();
+//     for(int index = 0; index < size; index++)
+//         result.push_back(0);
+// }
 
-void MatrixMultiplication(std::vector<std::vector<double> > A, std::vector<double> x, std::vector<double> &matrixMultiplication){
-    int matrixSize = A.size();
-    Zeros(matrixMultiplication, matrixSize);
-    for(int index = 0; index < matrixSize; index++){
-        for(int jIndex = 0; jIndex < matrixSize; jIndex++)
-            matrixMultiplication[index] += A[index][jIndex] * x[jIndex];
-    }
-    return;
-}
+// void MatrixMultiplication(std::vector<std::vector<double> > A, std::vector<double> x, std::vector<double> &matrixMultiplication){
+//     int matrixSize = A.size();
+//     Zeros(matrixMultiplication, matrixSize);
+//     for(int index = 0; index < matrixSize; index++){
+//         for(int jIndex = 0; jIndex < matrixSize; jIndex++)
+//             matrixMultiplication[index] += A[index][jIndex] * x[jIndex];
+//     }
+//     return;
+// }
 
 
-bool GaussElimination(std::vector<std::vector<double> > A, std::vector<double> b, std::vector<double> &result){
-    int matrixSize = A.size();
-        for(int index = 0; index < matrixSize; index++){
-            int indexMax = index;
-            for(int jIndex = index + 1; jIndex < matrixSize; jIndex++){
-                if(abs(A[jIndex][index]) > abs(A[indexMax][index])){
-                    indexMax = jIndex;
-                }
-            }
-            if(A[indexMax][index] == 0)
-                return 0;
-            std::swap(A[index], A[indexMax]);
-            std::swap(b[index], b[indexMax]);
+bool GaussElimination(double *An, double **X, int x)
+{
+	for (int k = 0; k < x; k++)
+	{
+		double max = fabs(X[k][k]);
+		int remeber = k;		
+		for (int i = k + 1; i < x; i++)
+		{
+			if (max < fabs(X[i][k]))
+			{
+				max = fabs(X[i][k]);
+				remeber = i;
+			}
+		}
 
-            for(int jIndex = index + 1; jIndex < matrixSize; jIndex++){
-                double factor = A[jIndex][index] / A[index][index];
-                for(int kIndex = index; kIndex < matrixSize; kIndex++)
-                    A[jIndex][kIndex] -= factor * A[index][kIndex];
-                b[jIndex] -= factor * b[index];
-            }
-        }
+		if (fabs(max - 0) < 1e-6)
+		{
+			return 0;
+		}
 
-    Zeros(result, matrixSize);
+		if (k != remeber)				
+		{
+			double *temp = X[k];
+			X[k] = X[remeber];
+			X[remeber] = temp;
+		}
 
-    for(int index = matrixSize - 1; index > -1; index--){
-        double sum = 0;
-        for(int jIndex = index; jIndex < matrixSize; jIndex++){
-            sum += A[index][jIndex] * result[jIndex];
-        }
-        result[index] = (b[index] - sum) / A[index][index];
-    }
 
-    return 1;
+		double lead = X[k][k];			
+		for (int r = k; r < x + 1; r++)
+		{
+			X[k][r] /= lead;
+		}
+		
+		for (int i = k + 1; i < x; i++)
+		{
+			double temp = X[i][k];
+			for (int j = k; j < x + 1; j++)
+			{
+				X[i][j] -= X[k][j] * temp;
+			}
+		}
+		
+	}
+
+	An[x - 1] = X[x - 1][x + 1 - 1];				
+	for (int i = x - 2; i >= 0; i--)
+	{
+		An[i] = X[i][x + 1 - 1];
+		for (int j = i + 1; j < x + 1 - 1; j++)
+		{
+			An[i] -= X[i][j] * An[j];
+		}
+	}
+	return 1;
 }
